@@ -14,7 +14,13 @@ class MediaRelay(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.bot or not message.attachments:
+        if message.author.bot:
+            return
+
+        attachments = list(message.attachments)
+        for snapshot in message.message_snapshots:
+            attachments.extend(snapshot.attachments)
+        if not attachments:
             return
 
         cfg = self.bot.config.media_relay
@@ -26,7 +32,7 @@ class MediaRelay(commands.Cog):
             log.warning("Media relay target channel %s not found", cfg.target_channel_id)
             return
 
-        attachments = message.attachments[:_MAX_FILES_PER_MESSAGE]
+        attachments = attachments[:_MAX_FILES_PER_MESSAGE]
         try:
             files = [await a.to_file() for a in attachments]
             await target.send(files=files)
