@@ -42,17 +42,41 @@ class MediaRelay(commands.Cog):
             )
         attachments = attachments[:_MAX_FILES_PER_MESSAGE]
 
+        limit = target.guild.filesize_limit
+        small = [a for a in attachments if a.size <= limit]
+        large = [a for a in attachments if a.size > limit]
+
         log.info(
-            "Relaying %d attachment(s) from %s (msg %s, channel %s) to channel %s",
-            len(attachments),
-            message.author,
+            "Relaying msg %s from %s (channel %s) to channel %s: %d uploadable, %d over %d-byte limit (link fallback)",
             message.id,
+            message.author,
             message.channel.id,
             target.id,
+            len(small),
+            len(large),
+            limit,
         )
+
         try:
-            files = [await a.to_file() for a in attachments]
-            await target.send(files=files)
+            batch: list[discord.Attachment] = []
+            batch_size = 0
+            for a in small:
+                if batch and (len(batch) >= _MAX_FILES_PER_MESSAGE or batch_size + a.size > limit):
+                    await target.send(files=[await f.to_file() for f in batch])
+                    batch, batch_size = [], 0
+                batch.append(a)
+                batch_size += a.size
+            if batch:
+                await target.send(files=[await f.to_file() for f in batch])
+
+            for a in large:
+                log.info(
+                    "Attachment %s (%d bytes) exceeds target limit; relaying as link instead of re-upload",
+                    a.filename,
+                    a.size,
+                )
+                await target.send(content=a.url)
+
             log.info("Relayed msg %s to channel %s", message.id, target.id)
         except discord.Forbidden:
             log.error("Missing permissions to relay media to channel %s", target.id)
