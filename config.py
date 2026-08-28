@@ -49,6 +49,13 @@ class TargetGuild:
 
 
 @dataclass
+class MediaRelay:
+    source_channels: list[int]
+    target_guild_id: int
+    target_channel_id: int
+
+
+@dataclass
 class Config:
     master_guild_id: int
     target_guilds: list[TargetGuild]
@@ -56,6 +63,7 @@ class Config:
     reminder_message: str
     reminder_minutes_before: int
     log_level: str
+    media_relay: Optional[MediaRelay] = None
 
     @classmethod
     def load(cls, path: str = "config.yaml") -> "Config":
@@ -99,6 +107,17 @@ class Config:
                 )
             )
 
+        media_relay = None
+        raw_media_relay = data.get("media_relay")
+        if raw_media_relay:
+            media_relay = MediaRelay(
+                source_channels=[
+                    int(c) for c in raw_media_relay.get("source_channels") or []
+                ],
+                target_guild_id=int(raw_media_relay["target_guild_id"]),
+                target_channel_id=int(raw_media_relay["target_channel_id"]),
+            )
+
         return cls(
             master_guild_id=int(raw_master),
             target_guilds=target_guilds,
@@ -109,6 +128,7 @@ class Config:
             ),
             reminder_minutes_before=reminder_minutes_before,
             log_level=data.get("log_level", "INFO"),
+            media_relay=media_relay,
         )
 
     def get_target_guild(self, guild_id: int) -> Optional[TargetGuild]:

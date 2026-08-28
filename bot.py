@@ -44,6 +44,7 @@ class LoreRelayBot(commands.Bot):
         intents = discord.Intents.default()
         intents.guild_scheduled_events = True
         intents.members = True
+        intents.message_content = True
 
         super().__init__(
             command_prefix="!",
@@ -59,7 +60,7 @@ class LoreRelayBot(commands.Bot):
     async def setup_hook(self) -> None:
         await self.db.init()
 
-        for cog in ("cogs.relay", "cogs.reminders", "cogs.admin"):
+        for cog in ("cogs.relay", "cogs.reminders", "cogs.admin", "cogs.media_relay"):
             await self.load_extension(cog)
 
         # Sync slash commands globally

@@ -20,6 +20,13 @@ target_guilds:
       - image
       - location
 
+media_relay:
+  source_channels:
+    - "1519704066761166898"
+    - "1519704018241458196"
+  target_guild_id: "1523095563829248182"
+  target_channel_id: "1539655545890406531"
+
 event_name_prefix: "[PD] - "
 
 # {event_name}, {mentions}, and {minutes} are replaced at runtime
