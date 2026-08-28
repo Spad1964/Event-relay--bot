@@ -127,7 +127,7 @@ class RelayEvents(commands.Cog):
             if host_name:
                 return f"{_RELAY_NAME_FALLBACK} - {host_name}"
             return _RELAY_NAME_FALLBACK
-        return f"{self.bot.config.event_name_prefix}{event.name}"
+        return f"{self.bot.config.event_name_prefix}{event.name}{self._event_host_name(event)}"
 
     def _event_host_name(self, event: discord.ScheduledEvent) -> Optional[str]:
         creator = getattr(event, "creator", None)
